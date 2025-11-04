@@ -12,6 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Sub Packages
-from . import wrappers
-from . import carla
+# Atari Envs
+from .carla_env import CarlaEnv

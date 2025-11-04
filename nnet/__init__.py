@@ -23,3 +23,5 @@ from . import utils
 from . import structs
 from . import inits
 from . import distributions
+from . import embodied
+from . import car_dreamer

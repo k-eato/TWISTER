@@ -32,7 +32,7 @@ import glob
 
 class TWISTER(models.Model):
 
-    def __init__(self, env_name, override_config={}, name="Transformer-based World model wIth contraSTivE Representations (TWISTER)"):
+    def __init__(self, env_name, env, cnn_keys, override_config={}, name="Transformer-based World model wIth contraSTivE Representations (TWISTER)"):
         super(TWISTER, self).__init__(name=name)
 
         # Model Sizes
@@ -55,7 +55,7 @@ class TWISTER(models.Model):
         # Env Type
         env_name = env_name.split("-")
         self.env_type = env_name[0]
-        assert self.env_type in ["dmc", "atari100k"]
+        assert self.env_type in ["dmc", "atari100k", "carla"]
 
         # Config
         self.config = AttrDict()
@@ -75,6 +75,12 @@ class TWISTER(models.Model):
             self.config.model_size = "S"
             self.config.time_limit = 108000
             self.config.time_limit_eval = 108000
+        elif self.env_type == "carla":
+            self.config.env_class = envs.carla.CarlaEnv
+            self.config.env_params = {"env": env, "history_frames": 1, "cnn_keys": cnn_keys, "img_size": (128, 128), "action_repeat": 2}
+            self.config.model_size = "S"
+            self.config.time_limit = 1000
+            self.config.time_limit_eval = 1000
         self.config.eval_env_params = {}
         self.config.train_env_params = {}
 
@@ -82,13 +88,13 @@ class TWISTER(models.Model):
         self.config.batch_size = 16
         self.config.L = 64
         self.config.H = 15
-        self.config.num_envs = {"dmc": 4, "atari100k": 1}[self.env_type]
-        self.config.epochs = {"dmc": 50, "atari100k": 50}[self.env_type]
-        self.config.epoch_length = {"dmc": 5000, "atari100k": 2000}[self.env_type]
-        self.config.env_step_period = {"dmc": 512, "atari100k": 1024}[self.env_type] # call env_step (batch_size * L) / (env_step_period * num_envs) times
+        self.config.num_envs = {"dmc": 4, "atari100k": 1, "carla": 1}[self.env_type]
+        self.config.epochs = {"dmc": 50, "atari100k": 50, "carla": 50}[self.env_type]
+        self.config.epoch_length = {"dmc": 5000, "atari100k": 2000, "carla": 5000,}[self.env_type]
+        self.config.env_step_period = {"dmc": 512, "atari100k": 1024, "carla": 512,}[self.env_type] # call env_step (batch_size * L) / (env_step_period * num_envs) times
 
         # Eval
-        self.config.eval_episodes = {"dmc": 10, "atari100k": 100}[self.env_type]
+        self.config.eval_episodes = {"dmc": 10, "atari100k": 100, "carla": 10}[self.env_type]
 
         # Optimizer
         self.config.opt_weight_decay = 0.0
@@ -102,7 +108,7 @@ class TWISTER(models.Model):
         self.config.critic_grad_max_norm = 100
         self.config.actor_grad_max_norm = 100
         self.config.grad_init_scale = 32.0
-        self.config.precision = {"dmc": torch.float16, "atari100k": torch.float32}[self.env_type]
+        self.config.precision = {"dmc": torch.float16, "atari100k": torch.float32, "carla": torch.float16}[self.env_type]
 
         # Replay Buffer
         self.config.buffer_capacity = int(1e6)
@@ -138,7 +144,7 @@ class TWISTER(models.Model):
 
         # Actor Params
         self.config.actor_grad = "reinforce"
-        self.config.policy_discrete = {"dmc": False, "atari100k": True}[self.env_type]
+        self.config.policy_discrete = {"dmc": False, "atari100k": True, "carla": False}[self.env_type]
         self.config.eta_entropy = 0.0003
         self.config.sampling_tmp = 1.0
 

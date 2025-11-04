@@ -3,7 +3,7 @@ import os
 import json
 
 # Extract params from filename
-env_name = os.environ["env_name"]
+env_name = "carla"
 print("TWISTER selected env_name: {}".format(env_name))
 
 # Override Config
@@ -13,7 +13,7 @@ if isinstance(override_config, str):
 print("override_config:", override_config)
 
 # Model
-model = nnet.models.TWISTER(env_name=env_name, override_config=override_config)
+model = nnet.models.TWISTER(env_name=env_name, env, override_config=override_config)
 model.compile()
 
 # Training
